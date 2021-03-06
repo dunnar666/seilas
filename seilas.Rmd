@@ -1,0 +1,126 @@
+---
+title: "Bearbeiding av seilas2020"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+lang: nb_NO
+---
+
+```{r setup, echo=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+library(tidyverse)
+library(lubridate)
+library(modelr)
+library(broom)
+options(scipen = 999)
+```
+
+```{r message=FALSE}
+seilas2020 <- read_delim("seilas2020.csv", 
+    ";", escape_double = FALSE, locale = locale(decimal_mark = ",", 
+        grouping_mark = ".", encoding = "ISO-8859-1"), 
+    trim_ws = TRUE)
+```
+
+
+```{r}
+names(seilas2020)
+dim(seilas2020)
+```
+
+```{r}
+length(unique(seilas2020$fartoynavn))
+```
+
+```{r}
+unik_fartoy <- seilas2020[!duplicated(seilas2020$fartoynavn),]
+```
+
+**Denne enkle beregningen forteller meg at de totalt 148379 seilasene i 2020 ble utført av 4319 unike fartøy.**
+
+```{r}
+unique(seilas2020$skipsgruppe)
+```
+
+# Skipsgruppe: Fisk
+
+```{r}
+bygg_18_20 <- seilas2020 %>% 
+    select(skips_id, imo_nummer, mmsi_nummer, fartoynavn, byggeaar, doedvekttonn_dwt, lengde, bredde, hoeyde, dypgaaende, skipstype, skipsgruppe, landstroem_paa_skipet, flaggkode, flaggstat) %>%
+    filter(byggeaar > 2018) %>% 
+    unique()
+```
+
+```{r}
+fisk <- seilas2020 %>% 
+    select(byggeaar, lengde, fartoynavn, skipsgruppe) %>% 
+    filter(skipsgruppe == "Fisk")
+```
+
+```{r eval=FALSE, include=FALSE, paged.print=TRUE}
+fisk_unik <- fisk %>% 
+    unique()
+
+sort(fisk_unik$fartoynavn, decreasing = FALSE) %>%
+    unique(fisk_unik$fartoynavn)
+```
+
+
+# Skipsgruppe: Last
+
+```{r}
+last_unik <- seilas2020 %>% 
+    select(skips_id, imo_nummer, mmsi_nummer, fartoynavn, byggeaar, doedvekttonn_dwt, lengde, bredde, hoeyde, dypgaaende, skipstype, skipsgruppe, landstroem_paa_skipet, flaggkode, flaggstat) %>%
+    filter(skipsgruppe == "Last") %>% 
+    unique()
+
+unique(last_unik$skipstype)
+```
+
+```{r}
+last_unik %>% 
+    count(skipstype)
+```
+
+
+```{r}
+gen_cargo <- last_unik %>% 
+    filter(skipstype == "General Cargo Ship")
+length(unique(gen_cargo$fartoynavn))
+
+
+drill_rig <- last_unik %>% 
+    filter(skipstype == "Drilling Rig, semi Submersible")
+length(unique(drill_rig$fartoynavn))
+unique(drill_rig$fartoynavn)
+```
+
+```{r}
+bilfrakt <- last_unik %>% 
+    filter(skipstype == "Vehicles Carrier")
+
+sort(bilfrakt$fartoynavn, decreasing = FALSE) %>%
+    unique(bilfrakt$fartoynavn)
+
+bilfrakt %>% 
+    group_by(byggeaar) %>% 
+    summarise(lengde = mean(lengde),bredde=mean(bredde), n=n())
+
+bilfrakt %>% 
+    group_by(byggeaar) %>% 
+    summarise(lengde = mean(lengde),bredde=mean(bredde), n=n()) %>% 
+    ggplot(bilfrakt, mapping = aes(x = byggeaar, 
+                             y = lengde)) +
+  geom_line(alpha = 0.9) +
+  geom_smooth(se = FALSE) +
+  theme(legend.position = "bottom") +
+    ggtitle("Gjennomsnittlig fartøylengde per byggeår, bilfrakt")
+```
+
+
+
+
+
+
