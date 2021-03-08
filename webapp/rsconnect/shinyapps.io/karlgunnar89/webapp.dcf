@@ -1,0 +1,12 @@
+name: webapp
+title: webapp
+username:
+account: karlgunnar89
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3753126
+bundleId: 4315205
+url: https://karlgunnar89.shinyapps.io/webapp/
+when: 1615190712.88824
+asMultiple: FALSE
+asStatic: FALSE
